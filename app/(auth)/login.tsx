@@ -23,7 +23,7 @@ const { height, width } = Dimensions.get('window');
 // ─── Soccer SVG Fallback ─────────────────────────────────────────────────────
 function SoccerHeroSVG() {
     return (
-        <Svg width={220} height={220} viewBox="0 0 200 200">
+        <Svg width={280} height={280} viewBox="0 0 200 200">
             <Ellipse cx="100" cy="188" rx="70" ry="8" fill="#CCE3D8" />
             {/* Ball */}
             <Circle cx="100" cy="168" r="16" fill="#fff" stroke="#1A2E2A" strokeWidth="2" />
@@ -176,8 +176,8 @@ export default function LoginScreen() {
                     <Text style={styles.appName}>SOCCER AI</Text>
                     <Text style={styles.appSubtitle}>{t('subtitle', 'Football insights powered by machine learning')}</Text>
 
-                    {/* Form Card */}
-                    <Animated.View style={[styles.formCard, { transform: [{ translateX: shakeAnim }] }]}>
+                    {/* Form Container (No card styling) */}
+                    <Animated.View style={[styles.formContainer, { transform: [{ translateX: shakeAnim }] }]}>
                         {error ? (
                             <Text style={styles.errorText}>{error}</Text>
                         ) : null}
@@ -208,23 +208,26 @@ export default function LoginScreen() {
                                 returnKeyType="done"
                             />
                         </View>
-
-                        <TouchableOpacity
-                            style={[styles.loginBtn, loading && styles.loginBtnLoading]}
-                            onPress={handleLogin}
-                            disabled={loading}
-                            activeOpacity={0.85}
-                        >
-                            {loading ? (
-                                <View style={styles.loadingContent}>
-                                    <LoadingDots />
-                                    <Text style={styles.loadingText}>{loadingMsg}</Text>
-                                </View>
-                            ) : (
-                                <Text style={styles.loginBtnText}>{t('signIn', 'Sign In')}</Text>
-                            )}
-                        </TouchableOpacity>
                     </Animated.View>
+
+                    {/* Spacer to push button to bottom */}
+                    <View style={{ flex: 1 }} />
+
+                    <TouchableOpacity
+                        style={[styles.loginBtn, loading && styles.loginBtnLoading]}
+                        onPress={handleLogin}
+                        disabled={loading}
+                        activeOpacity={0.85}
+                    >
+                        {loading ? (
+                            <View style={styles.loadingContent}>
+                                <LoadingDots />
+                                <Text style={styles.loadingText}>{loadingMsg}</Text>
+                            </View>
+                        ) : (
+                            <Text style={styles.loginBtnText}>{t('signIn', 'Sign In')}</Text>
+                        )}
+                    </TouchableOpacity>
                 </Animated.View>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -250,12 +253,12 @@ const styles = StyleSheet.create({
     heroSection: {
         alignItems: 'center',
         justifyContent: 'center',
-        height: 220,
+        height: 280,
         marginBottom: 8,
     },
     heroImage: {
-        width: 220,
-        height: 220,
+        width: 280,
+        height: 280,
     },
     appName: {
         fontSize: 26,
@@ -270,20 +273,10 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 36,
     },
-    formCard: {
+    formContainer: {
         width: '100%',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        // Only corner borders via borderColor
-        borderWidth: 2,
-        borderColor: Colors.accent,
-        padding: 24,
+        paddingHorizontal: 8,
         gap: 14,
-        shadowColor: Colors.accent,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 12,
-        elevation: 4,
     },
     errorText: {
         color: Colors.error,
@@ -306,16 +299,18 @@ const styles = StyleSheet.create({
         color: Colors.text,
     },
     loginBtn: {
-        height: 54,
-        borderRadius: 14,
+        height: 58,
+        width: '100%',
+        borderRadius: 16,
         backgroundColor: Colors.primary,
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 4,
+        marginTop: 24,
+        marginBottom: 12,
         shadowColor: Colors.primary,
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.35,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
         elevation: 6,
     },
     loginBtnLoading: {

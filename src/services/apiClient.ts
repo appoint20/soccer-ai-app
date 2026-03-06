@@ -26,12 +26,19 @@ async function apiFetch<T>(
         headers,
     });
 
-    const body = await response.json().catch(() => ({})) as any;
+    let body: any = {};
+    try {
+        const text = await response.text();
+        body = text ? JSON.parse(text) : {};
+    } catch (e) {
+        // If it's not JSON, we'll rely on the status code for error handling
+        body = {};
+    }
 
     if (!response.ok) {
         const detail = body?.detail || body?.message;
 
-        if (response.status === 401 || response.status === 400 || response.status === 422) {
+        if (response.status === 401 || response.status === 400 || response.status === 422 || response.status === 403) {
             throw new Error(detail || 'Invalid username or password.');
         }
         if (response.status >= 500) {
@@ -53,7 +60,7 @@ export const loginUser = async (
     password: string
 ): Promise<LoginResponse> => {
     try {
-        return await apiFetch<LoginResponse>('/api/auth/login', {
+        return await apiFetch<LoginResponse>('/api/Auth/login', {
             method: 'POST',
             body: JSON.stringify({ username, password }),
         });
