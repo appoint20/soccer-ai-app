@@ -70,8 +70,12 @@ export default function HomeScreen() {
             }
         }
 
-        // Format yyyy-mm-dd
-        const dateStr = dateObj.toISOString().split('T')[0];
+        // Format yyyy-mm-dd using LOCAL time to prevent UTC timezone shift bugs
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+
         const lang = i18n.language || 'en';
 
         const response: any = await fetchMatchesFromApi(dateStr, lang);
