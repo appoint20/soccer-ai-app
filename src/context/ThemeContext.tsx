@@ -1,25 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme } from '../hooks/useColorScheme';
 
-type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextType {
     theme: Theme;
     colors: any;
-    toggleTheme: () => void;
+    setTheme: (theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const systemColorScheme = useColorScheme();
-    const [theme, setTheme] = useState<Theme>(systemColorScheme || 'dark');
+    const [theme, setTheme] = useState<Theme>('system');
 
-    const toggleTheme = () => {
-        setTheme(prev => prev === 'light' ? 'dark' : 'light');
-    };
+    const activeMode = theme === 'system' ? (systemColorScheme || 'dark') : theme;
 
-    const colors = theme === 'dark' ? {
+    const colors = activeMode === 'dark' ? {
         background: '#0F172A',
         card: '#1E293B',
         primary: '#38BDF8',
@@ -44,7 +42,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     return (
-        <ThemeContext.Provider value={{ theme, colors, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme, colors, setTheme }}>
             {children}
         </ThemeContext.Provider>
     );

@@ -1,21 +1,27 @@
 {
-    "extends": "expo/tsconfig.base",
-    "compilerOptions": {
-        "strict": true,
-        "jsx": "react-jsx",
-        "moduleResolution": "node",
-        "baseUrl": ".",
-        "lib": [
-            "ESNext",
-            "DOM"
-        ],
-        "paths": {
-            "@/*": [
-                "./*"
-            ],
-            "src/*": [
-                "./src/*"
-            ]
-        }
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "src/*": [
+        "./src/*"
+      ]
     }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
 }

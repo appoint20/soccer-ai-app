@@ -1,49 +1,46 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { loginUser } from './apiClient';
+
+const TOKEN_KEY = '@soccer_ai_token';
+const USER_KEY = '@soccer_ai_user';
 
 export interface User {
-    id: string;
-    email: string;
+    username: string;
     name: string;
+    token: string;
 }
 
-const USER_STORAGE_KEY = '@soccer_ai_user';
-
 export const AuthService = {
-    login: async (email: string, password: string): Promise<User> => {
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+    /**
+     * Login via backend API, persist token
+     */
+    login: async (username: string, password: string): Promise<User> => {
+        const { token } = await loginUser(username, password);
 
-        // For demo purposes, any login works
-        const mockUser: User = {
-            id: '1',
-            email: email,
-            name: 'Demo User',
+        const user: User = {
+            username,
+            name: username,
+            token,
         };
 
-        await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mockUser));
-        return mockUser;
-    },
+        await AsyncStorage.multiSet([
+            [TOKEN_KEY, token],
+            [USER_KEY, JSON.stringify(user)],
+        ]);
 
-    register: async (email: string, password: string, name: string): Promise<User> => {
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const mockUser: User = {
-            id: Math.random().toString(36).substring(7),
-            email: email,
-            name: name,
-        };
-
-        await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mockUser));
-        return mockUser;
+        return user;
     },
 
     logout: async (): Promise<void> => {
-        await AsyncStorage.removeItem(USER_STORAGE_KEY);
+        await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
     },
 
     getUser: async (): Promise<User | null> => {
-        const userData = await AsyncStorage.getItem(USER_STORAGE_KEY);
+        const userData = await AsyncStorage.getItem(USER_KEY);
         return userData ? JSON.parse(userData) : null;
+    },
+
+    getToken: async (): Promise<string | null> => {
+        return AsyncStorage.getItem(TOKEN_KEY);
     },
 };

@@ -1,0 +1,243 @@
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, PanResponder, Dimensions, SafeAreaView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import { Colors } from '../../src/constants/colors';
+import { ScreenHeader } from '../../src/components/ScreenHeader';
+import { CombinationCard } from '../../src/components/CombinationCard';
+import { SofascoreDatePicker } from '../../src/components/SofascoreDatePicker';
+import { mockCombinations } from '../../src/hooks/useCombinations';
+import { useCombinations } from '../../src/hooks/useCombinations';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
+const SWIPE_OUT_DURATION = 250;
+
+export default function CombinationsScreen() {
+    const [selectedDate, setSelectedDate] = useState(new Date());
+
+    const { t } = useTranslation();
+    const {
+        currentIndex, savedCount, skippedCount, totalCount,
+        handleSwipeLeft, handleSwipeRight, resetCards, isFinished
+    } = useCombinations();
+
+    const position = useRef(new Animated.ValueXY()).current;
+
+    // We must recreate the panResponder if currentIndex changes so it attaches to the top card correctly
+    const panResponder = useMemo(() => PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onPanResponderMove: (event, gesture) => {
+            position.setValue({ x: gesture.dx, y: 0 }); // Only allow horizontal sliding
+        },
+        onPanResponderRelease: (event, gesture) => {
+            if (gesture.dx > SWIPE_THRESHOLD) {
+                forceSwipe('right');
+            } else if (gesture.dx < -SWIPE_THRESHOLD) {
+                forceSwipe('left');
+            } else {
+                resetPosition();
+            }
+        }
+    }), [currentIndex]);
+
+    const forceSwipe = (direction: 'left' | 'right') => {
+        const x = direction === 'right' ? SCREEN_WIDTH : -SCREEN_WIDTH;
+        Animated.timing(position, {
+            toValue: { x, y: 0 },
+            duration: SWIPE_OUT_DURATION,
+            useNativeDriver: false // Some pan responder animation values can struggle with native driver
+        }).start(() => onSwipeComplete(direction));
+    };
+
+    const onSwipeComplete = (direction: 'left' | 'right') => {
+        direction === 'right' ? handleSwipeRight() : handleSwipeLeft();
+        position.setValue({ x: 0, y: 0 });
+    };
+
+    const resetPosition = () => {
+        Animated.spring(position, {
+            toValue: { x: 0, y: 0 },
+            friction: 6,
+            useNativeDriver: false
+        }).start();
+    };
+
+    const getCardStyle = () => {
+        const rotate = position.x.interpolate({
+            inputRange: [-SCREEN_WIDTH * 1.5, 0, SCREEN_WIDTH * 1.5],
+            outputRange: ['-60deg', '0deg', '60deg']
+        });
+
+        return {
+            ...position.getLayout(),
+            transform: [{ rotate }]
+        };
+    };
+
+    // Derived view variables
+    const activeCombo = mockCombinations[currentIndex];
+    const nextCombo = mockCombinations[currentIndex + 1];
+
+    if (isFinished) {
+        return (
+            <View style={styles.container}>
+                <View style={styles.emptyContainer}>
+                    <Ionicons name="checkmark-circle" size={64} color={Colors.success} />
+                    <Text style={styles.emptyTitle}>All Done!</Text>
+                    <Text style={styles.emptySubtitle}>You've reviewed all combinations</Text>
+                    <Text style={styles.statsText}>Saved: {savedCount} | Skipped: {skippedCount}</Text>
+                    <TouchableOpacity style={styles.resetButton} onPress={resetCards}>
+                        <Text style={styles.resetButtonText}>Review Again</Text>
+                    </TouchableOpacity>
+                </View>
+                <View style={{ height: 110 }} />
+            </View>
+        );
+    }
+
+    return (
+        <SafeAreaView style={styles.container}>
+            {/* Headers Area (Fixed Position) */}
+            <View style={styles.topSection}>
+                <ScreenHeader
+                    title={t('combinationsTitle', 'SOCCER AI')}
+                    subtitle={t('combinationsSubtitle', 'AI assisted scenario simulations based on historical match patterns')}
+                    showWarning={false} // Ensure warning is hidden
+                />
+
+                <SofascoreDatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} />
+            </View>
+
+            {/* Stack Deck Area */}
+            <View style={styles.deckContainer}>
+                {nextCombo && (
+                    <Animated.View style={[styles.stackedCard, { zIndex: 1 }]}>
+                        <CombinationCard combo={nextCombo} />
+                    </Animated.View>
+                )}
+
+                {activeCombo && (
+                    <Animated.View
+                        {...panResponder.panHandlers}
+                        style={[getCardStyle(), styles.topCard, { zIndex: 2 }]}
+                    >
+                        <CombinationCard combo={activeCombo} />
+                    </Animated.View>
+                )}
+            </View>
+
+            {/* Footer Area */}
+            <View style={styles.bottomSection}>
+                <Text style={styles.footerText}>
+                    {t('infoDisclaimer', 'This analysis is for informational purposes only and shows how historical data behaves. It does not constitute betting advice or a guarantee of outcomes.')}
+                </Text>
+            </View>
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+    topSection: {
+        paddingTop: 10,
+        zIndex: 10,
+    },
+    pageHeader: {
+        paddingHorizontal: 20,
+        marginBottom: 20,
+    },
+    titleText: {
+        fontSize: 26,
+        fontWeight: '900',
+        color: '#1F2937',
+        letterSpacing: 0.5,
+        marginBottom: 8,
+    },
+    subtitleText: {
+        fontSize: 14,
+        color: '#6B7280',
+        lineHeight: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+        paddingBottom: 20,
+    },
+    dateRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        marginBottom: 30,
+    },
+    dateSelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F3F4F6',
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 10,
+        width: 180,
+        justifyContent: 'space-between',
+    },
+    dateBtn: {
+        padding: 4,
+    },
+    dateText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#374151',
+    },
+    matchesBadge: {
+        backgroundColor: '#57845E',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+    matchesBadgeText: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '700',
+    },
+    deckContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1,
+    },
+    stackedCard: {
+        position: 'absolute',
+        width: '100%',
+        zIndex: 1,
+    },
+    topCard: {
+        position: 'absolute',
+        width: '100%',
+        zIndex: 2,
+    },
+    bottomSection: {
+        position: 'absolute',
+        bottom: 110, // Avoid bottom nav bar overlap
+        left: 0,
+        right: 0,
+        zIndex: 1,
+        paddingHorizontal: 20,
+    },
+    footerContainer: {
+        paddingTop: 10,
+    },
+    footerText: {
+        textAlign: 'center',
+        fontSize: 11,
+        color: '#9CA3AF',
+        lineHeight: 16,
+    },
+    emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12, padding: 20 },
+    emptyTitle: { fontSize: 22, fontWeight: '700', color: Colors.text },
+    emptySubtitle: { fontSize: 14, color: Colors.textSecondary },
+    statsText: { fontSize: 15, fontWeight: '600', color: Colors.primary },
+    resetButton: { marginTop: 12, backgroundColor: Colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
+    resetButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+});

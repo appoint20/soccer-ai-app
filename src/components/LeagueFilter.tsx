@@ -1,7 +1,13 @@
 import React from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet, View } from 'react-native';
-import { useTheme } from '../context/ThemeContext';
-import { League } from '../services/api';
+import { Colors } from '../constants/colors';
+
+export interface League {
+    id: string;
+    name: string;
+    country: string;
+    flag: string;
+}
 
 interface LeagueFilterProps {
     leagues: League[];
@@ -9,8 +15,12 @@ interface LeagueFilterProps {
     onSelectLeague: (league: string | null) => void;
 }
 
-const LeagueFilter: React.FC<LeagueFilterProps> = ({ leagues, selectedLeague, onSelectLeague }) => {
-    const { colors } = useTheme();
+export const LeagueFilter: React.FC<LeagueFilterProps> = ({
+    leagues,
+    selectedLeague,
+    onSelectLeague,
+}) => {
+    const isAll = selectedLeague === null;
 
     return (
         <View style={styles.container}>
@@ -19,47 +29,67 @@ const LeagueFilter: React.FC<LeagueFilterProps> = ({ leagues, selectedLeague, on
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
+                {/* All */}
                 <TouchableOpacity
-                    style={[
-                        styles.chip,
-                        { backgroundColor: selectedLeague === null ? colors.primary : colors.card, borderColor: colors.border }
-                    ]}
+                    style={[styles.chip, isAll && styles.chipActive]}
                     onPress={() => onSelectLeague(null)}
+                    activeOpacity={0.7}
                 >
-                    <Text style={[styles.chipText, { color: selectedLeague === null ? '#FFFFFF' : colors.textSecondary }]}>
-                        All Leagues
-                    </Text>
+                    <Text style={[styles.chipText, isAll && styles.chipTextActive]}>All</Text>
                 </TouchableOpacity>
 
-                {leagues.map((league) => (
-                    <TouchableOpacity
-                        key={league.id}
-                        style={[
-                            styles.chip,
-                            { backgroundColor: selectedLeague === league.name ? colors.primary : colors.card, borderColor: colors.border }
-                        ]}
-                        onPress={() => onSelectLeague(league.name)}
-                    >
-                        <Text style={[styles.chipText, { color: selectedLeague === league.name ? '#FFFFFF' : colors.textSecondary }]}>
-                            {league.name}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+                {leagues.map((league) => {
+                    const active = selectedLeague === league.name;
+                    return (
+                        <TouchableOpacity
+                            key={league.id}
+                            style={[styles.chip, active && styles.chipActive]}
+                            onPress={() => onSelectLeague(league.name)}
+                            activeOpacity={0.7}
+                        >
+                            {league.flag ? (
+                                <Text style={styles.flag}>{league.flag}</Text>
+                            ) : null}
+                            <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                                {league.name}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
             </ScrollView>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { paddingVertical: 8 },
-    scrollContent: { paddingHorizontal: 16, gap: 8 },
-    chip: {
+    container: { paddingVertical: 6 },
+    scrollContent: {
         paddingHorizontal: 16,
+        gap: 8,
+        alignItems: 'center',
+    },
+    chip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 20,
-        borderWidth: 1,
+        backgroundColor: Colors.card,
+        borderWidth: 1.5,
+        borderColor: `${Colors.accent}60`,
     },
-    chipText: { fontSize: 13, fontWeight: '600' },
+    chipActive: {
+        backgroundColor: Colors.primary,
+        borderColor: Colors.primary,
+    },
+    flag: { fontSize: 14 },
+    chipText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: Colors.textSecondary,
+    },
+    chipTextActive: {
+        color: '#FFFFFF',
+    },
 });
-
-export default LeagueFilter;
