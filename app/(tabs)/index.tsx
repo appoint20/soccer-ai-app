@@ -50,7 +50,7 @@ const parsePct = (val?: number) => {
 };
 
 // Module-level cache to prevent re-fetching when navigating back to the screen
-const matchesCache: Record<string, { matches: Match[]; pastStats: any }> = {};
+const matchesCache: Record<string, { matches: Match[]; pastStats: any; rawMatches: any[] }> = {};
 
 // ─── Home Screen ──────────────────────────────────────────────────────────────
 export default function HomeScreen() {
@@ -78,6 +78,7 @@ export default function HomeScreen() {
         if (!forceRefresh && matchesCache[cacheKey]) {
             setMatches(matchesCache[cacheKey].matches);
             setPastStats(matchesCache[cacheKey].pastStats);
+            rawApiMatchesRef.current = matchesCache[cacheKey].rawMatches || [];
             setRefreshing(false);
 
             // Still load leagues in background if empty
@@ -165,11 +166,11 @@ export default function HomeScreen() {
             setPastStats(summaryData || null);
 
             // Save to cache
-            matchesCache[cacheKey] = { matches: mappedMatches, pastStats: summaryData || null };
+            matchesCache[cacheKey] = { matches: mappedMatches, pastStats: summaryData || null, rawMatches: apiMatches };
         } else {
             setMatches([]);
             setPastStats(null);
-            matchesCache[cacheKey] = { matches: [], pastStats: null };
+            matchesCache[cacheKey] = { matches: [], pastStats: null, rawMatches: [] };
         }
         setRefreshing(false);
     };
