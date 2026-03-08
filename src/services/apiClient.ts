@@ -109,6 +109,44 @@ export const loginUser = async (
     }
 };
 
+// ─── Backtest ─────────────────────────────────────────────────────────────────
+export interface BacktestSummary {
+    total_roi: number;
+    total_staked: number;
+    total_returned: number;
+    combination_accuracy: number;
+    win_rate: number;
+    combos_total: number;
+    combos_won: number;
+    match_analysis_accuracy: number;
+    total_legs: number;
+    correct_legs: number;
+}
+
+export interface WeeklyBreakdown {
+    week: string;
+    total_bets: number;
+    bets_won: number;
+    roi_percent: number;
+}
+
+export interface LeagueAccuracy {
+    league: string;
+    btts_accuracy: number;
+    over25_accuracy: number;
+}
+
+export interface BacktestResponse {
+    summary: BacktestSummary;
+    weekly_breakdown: WeeklyBreakdown[];
+    league_accuracy: LeagueAccuracy[];
+}
+
+export const fetchBacktestData = async (): Promise<BacktestResponse | null> => {
+    const cacheKey = `@cache_backtest_stats`;
+    return await fetchWithCache(cacheKey, () => apiFetch<BacktestResponse>('/api/Backtest'));
+};
+
 // ─── Matches / Leagues ────────────────────────────────────────────────────────
 export const fetchMatchesFromApi = async (date: string, language: string = 'en') => {
     const cacheKey = `@cache_matches_${date}_${language}`;

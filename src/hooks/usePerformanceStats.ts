@@ -1,38 +1,62 @@
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { fetchBacktestData, BacktestResponse } from '../services/apiClient';
 
 export const usePerformanceStats = () => {
-    // Mock data for statistics
-    const weeklyData = useMemo(() => [
-        { week: 'W1', profit: 12.5, roi: 8.2, bets: 24, won: 15 },
-        { week: 'W2', profit: -5.2, roi: -3.1, bets: 18, won: 8 },
-        { week: 'W3', profit: 8.4, roi: 5.6, bets: 22, won: 14 },
-        { week: 'W4', profit: 15.1, roi: 10.4, bets: 30, won: 19 },
-        { week: 'W5', profit: 2.3, roi: 1.5, bets: 20, won: 11 },
-        { week: 'W6', profit: -8.7, roi: -5.8, bets: 25, won: 10 },
-        { week: 'W7', profit: 11.2, roi: 7.9, bets: 28, won: 18 },
-        { week: 'W8', profit: 6.5, roi: 4.2, bets: 15, won: 9 },
-        { week: 'W9', profit: 18.2, roi: 12.1, bets: 32, won: 22 },
-        { week: 'W10', profit: 4.8, roi: 3.2, bets: 21, won: 12 },
-    ], []);
+    const [data, setData] = useState<BacktestResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const totals = useMemo(() => {
-        return weeklyData.reduce(
-            (acc, curr) => ({
-                profit: acc.profit + curr.profit,
-                roi: acc.roi + curr.roi,
-                bets: acc.bets + curr.bets,
-                won: acc.won + curr.won,
-            }),
-            { profit: 0, roi: 0, bets: 0, won: 0 }
-        );
-    }, [weeklyData]);
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                setLoading(true);
+                const res = await fetchBacktestData();
+                setData(res);
+            } catch (err) {
+                setError('Failed to load performance stats');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadData();
+    }, []);
+
+    const stats = useMemo(() => {
+        if (!data) return null;
+
+        return {
+            weeklyData: data.weekly_breakdown.map(w => ({
+                week: w.week,
+                bets: w.total_bets,
+                won: w.bets_won,
+                roi: w.roi_percent,
+                profit: (w.roi_percent) // Using ROI as profit for now as we don't have a separate absolute profit per week in this specific breakdown
+            })),
+            leagueAccuracy: data.league_accuracy,
+            summary: data.summary,
+            totalProfit: data.summary.total_roi, // total_roi is the overall profit %
+            totalWon: data.summary.combos_won,
+            totalBets: data.summary.combos_total,
+            avgROI: data.summary.total_roi,
+            winRate: data.summary.win_rate,
+            combinationAccuracy: data.summary.combination_accuracy,
+            matchAnalysisAccuracy: data.summary.match_analysis_accuracy,
+            totalLegs: data.summary.total_legs,
+            correctLegs: data.summary.correct_legs
+        };
+    }, [data]);
 
     return {
-        weeklyData,
-        totalProfit: totals.profit,
-        totalWon: totals.won,
-        totalBets: totals.bets,
-        avgROI: totals.roi / weeklyData.length,
-        winRate: (totals.won / totals.bets) * 100,
+        ...stats,
+        loading,
+        error,
+        // Provide defaults for UI to prevent crashes before data loads
+        weeklyData: stats?.weeklyData || [],
+        totalProfit: stats?.totalProfit || 0,
+        totalWon: stats?.totalWon || 0,
+        totalBets: stats?.totalBets || 0,
+        avgROI: stats?.avgROI || 0,
+        winRate: stats?.winRate || 0,
     };
 };

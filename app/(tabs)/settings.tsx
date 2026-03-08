@@ -6,11 +6,13 @@ import { useTheme } from '../../src/context/ThemeContext';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import { useAuth } from '../../src/context/AuthContext';
 import { triggerDailySync } from '../../src/services/apiClient';
+import { BacktestReport } from '../../src/components/BacktestReport';
 
 export default function SettingsScreen() {
     const { t, i18n } = useTranslation();
     const { theme, colors, setTheme } = useTheme();
     const { user } = useAuth();
+    const [showReport, setShowReport] = React.useState(false);
 
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng);
@@ -107,6 +109,21 @@ export default function SettingsScreen() {
                             <Ionicons name="refresh-circle" size={24} color="#FFFFFF" />
                             <Text style={styles.syncButtonText}>Trigger Daily Sync</Text>
                         </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.syncButton, { backgroundColor: colors.accent, marginTop: 12 }]}
+                            onPress={() => setShowReport(!showReport)}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="analytics" size={24} color="#FFFFFF" />
+                            <Text style={styles.syncButtonText}>{showReport ? 'Hide' : 'Show'} Backtest Report</Text>
+                        </TouchableOpacity>
+
+                        {showReport && (
+                            <View style={styles.reportContainer}>
+                                <BacktestReport />
+                            </View>
+                        )}
                     </View>
                 )}
 
@@ -172,5 +189,11 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 15,
         fontWeight: '700',
+    },
+    reportContainer: {
+        marginTop: 20,
+        paddingTop: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#EEEEEE',
     }
 });
