@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://soccer-ai-api-1051756996610.europe-west3.run.app';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://soccer-ai-api.onrender.com';
 const API_KEY = process.env.EXPO_PUBLIC_SOCCER_API_KEY || '';
 const TOKEN_KEY = '@soccer_ai_token';
 
