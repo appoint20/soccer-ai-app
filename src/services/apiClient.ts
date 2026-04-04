@@ -74,9 +74,22 @@ async function apiFetch<T>(
     if (!response.ok) {
         const detail = body?.detail || body?.message;
 
-        if (response.status === 401 || response.status === 400 || response.status === 422 || response.status === 403) {
-            throw new Error(detail || 'Invalid username or password.');
+        if (response.status === 401) {
+            // Clear stale session if it's not a login request
+            if (!path.includes('/login')) {
+                await AsyncStorage.multiRemove([TOKEN_KEY, '@soccer_ai_user']);
+            }
+            throw new Error(detail || (path.includes('/login') ? 'Invalid username or password.' : 'Session expired. Please log in again.'));
         }
+
+        if (response.status === 403) {
+            throw new Error(detail || 'Access denied.');
+        }
+
+        if (response.status === 400 || response.status === 422) {
+            throw new Error(detail || 'Invalid request parameters.');
+        }
+
         if (response.status >= 500) {
             throw new Error('Something went wrong on our end. Please try again in a moment.');
         }
