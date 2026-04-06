@@ -31,11 +31,8 @@ function RootLayoutNav() {
 
         const inAuthGroup = segments[0] === '(auth)';
 
-        if (!user && !inAuthGroup) {
-            // Not logged in but not in auth group
-            router.replace('/(auth)/login');
-        } else if (user && inAuthGroup) {
-            // Logged in but currently in auth group
+        if (inAuthGroup) {
+            // Already logged in (via API key), redirect away from login if needed
             router.replace('/(tabs)');
         }
     }, [user, isReady, segments]);

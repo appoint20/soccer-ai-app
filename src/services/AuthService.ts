@@ -15,29 +15,29 @@ export const AuthService = {
      * Login via backend API, persist token
      */
     login: async (username: string, password: string): Promise<User> => {
-        const { token } = await loginUser(username, password);
-
+        // Since we are using API Key authentication, we skip the real login and return a mock user
         const user: User = {
-            username,
-            name: username,
-            token,
+            username: username || 'shivm',
+            name: username || 'Shivm',
+            token: 'api-key-auth',
         };
-
-        await AsyncStorage.multiSet([
-            [TOKEN_KEY, token],
-            [USER_KEY, JSON.stringify(user)],
-        ]);
-
         return user;
     },
 
     logout: async (): Promise<void> => {
-        await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+        // No-op for API-key based auth
     },
 
     getUser: async (): Promise<User | null> => {
-        const userData = await AsyncStorage.getItem(USER_KEY);
-        return userData ? JSON.parse(userData) : null;
+        // Always return a mock user if the API Key is configured
+        if (process.env.EXPO_PUBLIC_SOCCER_API_KEY) {
+            return {
+                username: 'shivm',
+                name: 'Shivm',
+                token: 'api-key-auth',
+            };
+        }
+        return null;
     },
 
     getToken: async (): Promise<string | null> => {

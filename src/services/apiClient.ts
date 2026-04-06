@@ -1,8 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://soccer-ai-api.onrender.com';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://soccer-api-api.onrender.com';
 const API_KEY = process.env.EXPO_PUBLIC_SOCCER_API_KEY || '';
-const TOKEN_KEY = '@soccer_ai_token';
 
 // ─── Cache Setup ──────────────────────────────────────────────────────────────
 const CACHE_EXPIRY_MS = 2 * 60 * 60 * 1000; // 2 hours
@@ -45,17 +44,11 @@ async function apiFetch<T>(
     path: string,
     options: RequestInit = {}
 ): Promise<T> {
-    const token = await AsyncStorage.getItem(TOKEN_KEY);
-
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-API-KEY': API_KEY,
         ...options.headers as Record<string, string>,
     };
-
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
 
     const response = await fetch(`${BASE_URL}${path}`, {
         ...options,
@@ -75,11 +68,7 @@ async function apiFetch<T>(
         const detail = body?.detail || body?.message;
 
         if (response.status === 401) {
-            // Clear stale session if it's not a login request
-            if (!path.includes('/login')) {
-                await AsyncStorage.multiRemove([TOKEN_KEY, '@soccer_ai_user']);
-            }
-            throw new Error(detail || (path.includes('/login') ? 'Invalid username or password.' : 'Session expired. Please log in again.'));
+            throw new Error(detail || 'Invalid API Key. Please check your configuration.');
         }
 
         if (response.status === 403) {
